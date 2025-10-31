@@ -2,10 +2,10 @@ import datetime
 from datetime import timedelta
 from random import choice, randint
 
-from clear_db import clear_database
 from faker import Faker
 
 from app.db.session import SessionLocal
+from app.db.utils.clear_db import clear_database
 from app.models.models import DailyActivity, Heartbeat, Machine, User
 
 fake = Faker()
