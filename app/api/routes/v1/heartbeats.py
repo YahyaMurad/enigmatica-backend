@@ -1,20 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.db.session import SessionLocal
 from app.models.models import Heartbeat
 from app.schemas.heartbeats import HeartbeatCreate, HeartbeatOut
-from app.core.dependencies import get_current_user_id
+from app.core.dependencies import get_current_user_id, get_current_user_id_from_api_key, get_db
 router = APIRouter(prefix="/api/v1/heartbeats", tags=["heartbeats"])
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # ----------------------
@@ -33,10 +24,12 @@ async def get_heartbeats(
 # POST /api/v1/heartbeats
 # -----------------------
 @router.post("/", response_model=HeartbeatOut)
-async def create_heartbeat(hb: HeartbeatCreate, db: Session = Depends(get_db)):
-    # later you'll use current_user.id instead of hardcoding
-    user_id = 1
-    new_heartbeat = Heartbeat(**hb.dict(), user_id=user_id)
+async def create_heartbeat(
+    hb: HeartbeatCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id_from_api_key),
+):
+    new_heartbeat = Heartbeat(**hb.dict(), user_id=current_user_id)
     db.add(new_heartbeat)
     db.commit()
     db.refresh(new_heartbeat)
