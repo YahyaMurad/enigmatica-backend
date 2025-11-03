@@ -6,13 +6,17 @@ from pydantic import BaseModel
 
 class HeartbeatCreate(BaseModel):
     entity: str
-    type: Optional[str] = None
-    category: Optional[str] = None
-    project: Optional[str] = None
-    branch: Optional[str] = None
+    alternate_project: Optional[str] = None
+    project_folder: Optional[str] = None
+    project_root_count: Optional[int] = None
     language: Optional[str] = None
     time: datetime
     is_write: Optional[bool] = False
+    lineno: Optional[int] = None
+    cursorpos: Optional[int] = None
+    lines_in_file: Optional[int] = None
+    line_changes: Optional[int] = None
+    is_unsaved_entity: Optional[bool] = None
 
 
 class HeartbeatOut(HeartbeatCreate):
