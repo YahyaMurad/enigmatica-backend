@@ -1,5 +1,4 @@
 import datetime
-
 from sqlalchemy import (
     JSON,
     TIMESTAMP,
@@ -11,7 +10,6 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import relationship
-
 from app.db.session import Base
 
 
@@ -23,9 +21,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
 
-    machines = relationship(
-        "Machine", back_populates="user", cascade="all, delete-orphan"
-    )
+    # Relationships
     heartbeats = relationship(
         "Heartbeat", back_populates="user", cascade="all, delete-orphan"
     )
@@ -43,25 +39,11 @@ class APIKey(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     key = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.now(datetime.UTC).date())
+    created_at = Column(DateTime, default=datetime.datetime.now(datetime.UTC))
     is_active = Column(Boolean, default=True)
 
-    # Relationships
+    # Relationship
     user = relationship("User", back_populates="api_keys")
-
-
-class Machine(Base):
-    __tablename__ = "machines"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    machine_name = Column(String, nullable=False)
-
-    # Relationships
-    user = relationship("User", back_populates="machines")
-    heartbeats = relationship(
-        "Heartbeat", back_populates="machine", cascade="all, delete-orphan"
-    )
 
 
 class Heartbeat(Base):
@@ -69,23 +51,22 @@ class Heartbeat(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True)
 
     entity = Column(String, nullable=False)
-    type = Column(String)
-    category = Column(String)
-    time = Column(TIMESTAMP, nullable=False)
-    project = Column(String)
-    branch = Column(String)
+    alternate_project = Column(String)
+    project_folder = Column(String)
+    project_root_count = Column(Integer)
     language = Column(String)
-    lines = Column(Integer)
+    time = Column(TIMESTAMP, nullable=False)
+    is_write = Column(Boolean, default=False)
     lineno = Column(Integer)
     cursorpos = Column(Integer)
-    is_write = Column(Boolean, default=False)
+    lines_in_file = Column(Integer)
+    line_changes = Column(Integer)
+    is_unsaved_entity = Column(Boolean, default=False)
 
-    # Relationships
+    # Relationship
     user = relationship("User", back_populates="heartbeats")
-    machine = relationship("Machine", back_populates="heartbeats")
 
 
 class DailyActivity(Base):
