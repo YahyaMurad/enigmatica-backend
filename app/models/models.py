@@ -1,15 +1,17 @@
 import datetime
+
 from sqlalchemy import (
-    JSON,
+    DECIMAL,
     TIMESTAMP,
     Boolean,
     Column,
-    DateTime,
+    Date,
     ForeignKey,
     Integer,
     String,
 )
 from sqlalchemy.orm import relationship
+
 from app.db.session import Base
 
 
@@ -39,7 +41,7 @@ class APIKey(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     key = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.now(datetime.UTC))
+    created_at = Column(TIMESTAMP, default=datetime.datetime.now(datetime.UTC))
     is_active = Column(Boolean, default=True)
 
     # Relationship
@@ -74,9 +76,63 @@ class DailyActivity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    date = Column(TIMESTAMP, nullable=False)
+    date = Column(Date, nullable=False, index=True)
     total_active_seconds = Column(Integer, default=0)
-    project_worked_on = Column(JSON, default={})
+    total_files_edited = Column(Integer, default=0)
+    total_projects = Column(Integer, default=0)
+    total_languages = Column(Integer, default=0)
+    created_at = Column(TIMESTAMP, default=datetime.datetime.now(datetime.UTC))
 
-    # Relationship
+    # Relationships
     user = relationship("User", back_populates="daily_activities")
+    project_activities = relationship(
+        "DailyProjectActivity",
+        back_populates="daily_activity",
+        cascade="all, delete-orphan",
+    )
+    language_activities = relationship(
+        "DailyLanguageActivity",
+        back_populates="daily_activity",
+        cascade="all, delete-orphan",
+    )
+    file_activities = relationship(
+        "DailyFileActivity",
+        back_populates="daily_activity",
+        cascade="all, delete-orphan",
+    )
+
+
+class DailyProjectActivity(Base):
+    __tablename__ = "daily_project_activity"
+
+    id = Column(Integer, primary_key=True, index=True)
+    daily_activity_id = Column(Integer, ForeignKey("daily_activity.id"), nullable=False)
+    project_name = Column(String, nullable=False)
+    total_seconds = Column(Integer, default=0)
+    files_edited = Column(Integer, default=0)
+
+    daily_activity = relationship("DailyActivity", back_populates="project_activities")
+
+
+class DailyLanguageActivity(Base):
+    __tablename__ = "daily_language_activity"
+
+    id = Column(Integer, primary_key=True, index=True)
+    daily_activity_id = Column(Integer, ForeignKey("daily_activity.id"), nullable=False)
+    language = Column(String, nullable=False)
+    total_seconds = Column(Integer, default=0)
+
+    daily_activity = relationship("DailyActivity", back_populates="language_activities")
+
+
+class DailyFileActivity(Base):
+    __tablename__ = "daily_file_activity"
+
+    id = Column(Integer, primary_key=True, index=True)
+    daily_activity_id = Column(Integer, ForeignKey("daily_activity.id"), nullable=False)
+    entity = Column(String, nullable=False)
+    project = Column(String)
+    total_seconds = Column(Integer, default=0)
+    total_line_changes = Column(Integer, default=0)
+
+    daily_activity = relationship("DailyActivity", back_populates="file_activities")
